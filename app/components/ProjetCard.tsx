@@ -17,6 +17,8 @@ type ProjetCardProps = {
     promoNom: string;
 }
 
+const FALLBACK = "/no-image-available.jpg";
+
 export default function ProjetCard({ titre, slug, auteur, lienGithub, dateCreation, promoNom }: ProjetCardProps) {
 
     const [imgSrc, setImgSrc] = useState(getThumbnailUrl(lienGithub));
@@ -28,7 +30,11 @@ export default function ProjetCard({ titre, slug, auteur, lienGithub, dateCreati
                     src={imgSrc}
                     alt={`Thumbnail du projet ${titre}`}
                     fill
-                    onError={() => setImgSrc("/default-thumbnail.png")}
+                    onError={() => {
+                        if (imgSrc !== FALLBACK) {
+                            setImgSrc(FALLBACK);
+                        }
+                    }}
                     unoptimized
                 />
             </div>
