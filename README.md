@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Adaverse
 
-## Getting Started
+Plateforme de découverte des projets réalisés par les apprenants d'Ada Tech School, classés par catégorie et promotion.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Présentation
+
+Adaverse permet à chaque apprenant de soumettre ses projets et au public de les découvrir, filtrés par type de projet ou par promotion. L'interface s'inspire visuellement des plateformes de streaming comme Netflix : des rangées de cartes par catégorie, avec aperçu visuel et accès au détail de chaque projet.
+
+---
+
+## Stack technique
+
+- **Framework** : Next.js 16 (App Router)
+- **Langage** : TypeScript
+- **Base de données** : PostgreSQL via [Neon](https://neon.tech) (serverless)
+- **ORM** : Drizzle ORM
+- **Styling** : CSS vanilla avec tokens (sans framework CSS)
+- **Déploiement** : Vercel
+
+---
+
+## Fonctionnalités
+
+- Affichage des projets publiés, groupés par catégorie (Ada Quiz, Pokada, Adataviz…)
+- Filtres combinables par promotion et par catégorie
+- Page de détail pour chaque projet (GitHub, démo, auteur, promo)
+- Formulaire de proposition de projet via une popup modale
+- Thumbnail automatique récupérée depuis le dépôt GitHub de chaque projet
+
+---
+
+## Architecture des fichiers principaux
+
+```
+app/
+  page.tsx                        # Homepage (Server Component)
+  layout.tsx                      # Layout global
+  projets/[slug]/page.tsx         # Page de détail d'un projet
+  api/
+    projets/route.ts              # GET tous les projets publiés
+    projets/[slug]/route.ts       # GET un projet par slug
+    projets-ada/route.ts          # GET types de projets Ada
+    promos/route.ts               # GET promotions
+  components/
+    ProjetCard.tsx                # Carte de projet (Client Component)
+    ProjetsList.tsx               # Liste filtrée (Client Component)
+    newProjetPopup.tsx            # Formulaire de proposition (Client Component)
+  actions/
+    proposerProjet.ts             # Server Action de soumission
+src/
+  db/
+    schema.ts                     # Schéma Drizzle
+    seed.ts                       # Script de données initiales
+  index.ts                        # Connexion à la base de données
+  lib/
+    utils.ts                      # Fonctions utilitaires (slug, thumbnail)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Modèle de données
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Trois tables principales :
 
-## Learn More
+- `projets_ada` — les types de projets proposés par Ada Tech School (Ada Quiz, Pokada, etc.)
+- `promos` — les promotions d'apprenants (Frida Kahlo, Grace Hopper…)
+- `projets_etudiants` — les projets soumis par les apprenants, avec clés étrangères vers les deux tables précédentes
 
-To learn more about Next.js, take a look at the following resources:
+Le champ `datePublication` est utilisé comme mécanisme de contrôle interne : seuls les projets avec une date de publication sont visibles publiquement, ce qui prépare l'implémentation future d'un système de validation admin.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Lancer le projet en local
 
-## Deploy on Vercel
+```bash
+# Installer les dépendances
+npm install
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Créer le fichier .env.local avec vos variables
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+DATABASE_URL=your_neon_database_url
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Appliquer les migrations
+npx drizzle-kit push
+
+# (Optionnel) Alimenter la base avec des données de test
+npx tsx src/db/seed.ts
+
+# Lancer le serveur de développement
+npm run dev
+```
+
+---
+
+## Évolutions prévues
+
+- Système d'authentification avec rôles (apprenant / admin)
+- Workflow de validation : un projet soumis passe par une étape de revue admin avant publication
+- Page d'administration pour gérer les projets en attente
+- Ajout de promotions et de types de projets via l'interface
